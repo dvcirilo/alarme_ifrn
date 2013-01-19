@@ -93,11 +93,11 @@ byte bcdToDec(byte val)  {
 // atualiza a data e hora no RTC.
 void setDateTime(){
 
-  byte second =      55; //0-59
-  byte minute =      49; //0-59
-  byte hour =        14; //0-23
-  byte weekDay =     3; //1-7
-  byte monthDay =    21; //1-31
+  byte second =      0; //0-59
+  byte minute =      37; //0-59
+  byte hour =        11; //0-23
+  byte weekDay =     7; //1-7
+  byte monthDay =    19; //1-31
   byte month =       1; //1-12
   byte year  =       13; //0-99
 
@@ -231,7 +231,7 @@ void loop() {
 
   //teste
   if(digitalRead(SW1)==LOW){
-    setDateTime();
+    //setDateTime();
   }
 
   // Escreve a data no display
@@ -241,8 +241,10 @@ void loop() {
   if(timeToStudy()){
     digitalWrite(RELE1, HIGH);
     digitalWrite(LED1, HIGH);
+    digitalWrite(BUZZER, HIGH);
   } else{
     digitalWrite(LED1, LOW);
     digitalWrite(RELE1, LOW);
+    digitalWrite(BUZZER, LOW);
   }
 }
