@@ -1,6 +1,6 @@
 /*
   Relógio, Calendário e controle de alarme de aulas para o IFRN - Pau dos Ferros
-  Autor: Prof. Diego Cirilo - Mat. 1935729
+  Autor: Diego Cirilo
   Data: 18/01/2013
 
 
@@ -50,7 +50,7 @@ byte zero = 0x00;
 // variável para temporização
 long timer01=0;
 
-// variáveis para os valores de tempo. weekDay é o dia da semana de dom a sab, 0-6.
+// variáveis para os valores de tempo. weekDay é o dia da semana de dom a sab, 1-7.
 byte second, minute, hour, weekDay, monthDay, month, year;
 
 // variáveis booleanas para alguns controles no código
@@ -133,7 +133,7 @@ void getDate(){
   second = bcdToDec(Wire.read());
   minute = bcdToDec(Wire.read());
   hour = bcdToDec(Wire.read() & 0b111111); //formato 24hrs
-  weekDay = bcdToDec(Wire.read()); //0-6 -> domingo - sábado
+  weekDay = bcdToDec(Wire.read()); //1-7 -> domingo - sábado
   monthDay = bcdToDec(Wire.read());
   month = bcdToDec(Wire.read());
   year = bcdToDec(Wire.read());
@@ -181,7 +181,7 @@ bool timeToStudy(){
 
   // se não for domingo(0) nem sábado(6) ou se jumper tiver HIGH(passa por cima de sábados e domingos, no caso de sábado letivo)
   // verifica pelas horas se toca 3s(intervalos e inicio/fim) ou 1s(entre aulas)
-  if((weekDay!=0 && weekDay!=6) || jumper==HIGH){
+  if((weekDay!=1 && weekDay!=7) || jumper==HIGH){
     // toque de 3s para 07h00m, 12h00m, 13h00m, 18h00m, 19h00m
     if((hour==7 || hour==12 || hour==13 || hour==18 || hour==19) && minute==0 && (second>=0 && second<=2))
       return true;
