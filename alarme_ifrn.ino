@@ -41,7 +41,7 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 #define LED1 10
 #define BUZZER 13
 
-// endereço de comunicação com o RTC, hardcoded, não tem como mudar...
+// endereço de comunicação com o RTC
 #define DS1307_ADDRESS 0x68
 
 //byte zero "de verdade"
@@ -86,7 +86,7 @@ byte decToBcd(byte val){
 }
 
 // converte de BCD para decimal. utilizado já que o RTC trabalha com dígitos BCD
-byte bcdToDec(byte val)  {
+byte bcdToDec(byte val){
   return ( (val/16*10) + (val%16) );
 }
 
@@ -94,10 +94,10 @@ byte bcdToDec(byte val)  {
 void setDateTime(){
 
   byte second =      0; //0-59
-  byte minute =      37; //0-59
-  byte hour =        11; //0-23
-  byte weekDay =     7; //1-7
-  byte monthDay =    19; //1-31
+  byte minute =      8; //0-59
+  byte hour =        1; //0-23
+  byte weekDay =     2; //1-7
+  byte monthDay =    21; //1-31
   byte month =       1; //1-12
   byte year  =       13; //0-99
 
@@ -226,12 +226,16 @@ bool timeToStudy(){
 // loop principal do arduino, é padrão. a ação acontece aqui. tipo um "main" do C.
 void loop() {
 
+  // atraso de 100ms para diminuir a frequência de acesso ao RTC, atualização do display, etc.
+  // ninguém está desesperado, e teoricamente ainda diminui o consumo.
+  delay(100);
+
   // Lê a data do RTC e escreve nas variáveis globais lá.
   getDate();
 
   //teste
   if(digitalRead(SW1)==LOW){
-    //setDateTime();
+    setDateTime();
   }
 
   // Escreve a data no display
@@ -239,9 +243,9 @@ void loop() {
 
   // chama timeToStudy para saber se ta na hora de tocar, se tiver, toca!
   if(timeToStudy()){
-    digitalWrite(RELE1, HIGH);
-    digitalWrite(LED1, HIGH);
-    digitalWrite(BUZZER, HIGH);
+    digitalWrite(RELE1, HIGH); // relé que controla a sirene
+    digitalWrite(LED1, HIGH); // led1 só p/ visualização
+    digitalWrite(BUZZER, HIGH); // buzzer da placa, idem.
   } else{
     digitalWrite(LED1, LOW);
     digitalWrite(RELE1, LOW);
