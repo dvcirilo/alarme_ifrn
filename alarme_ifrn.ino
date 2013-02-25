@@ -1,27 +1,27 @@
 /*
-  Relógio, Calendário e controle de alarme de aulas para o IFRN - Pau dos Ferros
-  Autor: Diego Cirilo
-  Data: 18/01/2013
+Relógio, Calendário e controle de alarme de aulas para o IFRN - Pau dos Ferros
+Autor: Diego Cirilo
+Data: 18/01/2013
 
 
-  Pinos utilizados:
- * RTC - SDA - SCL(AN4, AN5)
- * SW1(da placa) - PIN0
- * SW2(eu botei) - PIN6
- * LED2(azul - PIN2
- * RELE1 - PIN7
- * RELE2 - PIN8
- * JUMPER1 - PIN9
- * LED1(verm) - PIN10
- * BUZZER - PIN13
- * LCD RS - PIN12
- * LCD Enable - PIN11
- * LCD D4 - PIN5
- * LCD D5 - PIN4
- * LCD D6 - PIN3
- * LCD D7 - PIN2
+Pinos utilizados:
+* RTC - SDA - SCL(AN4, AN5)
+* SW1(da placa) - PIN0
+* SW2(eu botei) - PIN6
+* LED2(azul - PIN2
+* RELE1 - PIN7
+* RELE2 - PIN8
+* JUMPER1 - PIN9
+* LED1(verm) - PIN10
+* BUZZER - PIN13
+* LCD RS - PIN12
+* LCD Enable - PIN11
+* LCD D4 - PIN5
+* LCD D5 - PIN4
+* LCD D6 - PIN3
+* LCD D7 - PIN2
 
- */
+*/
 
 // biblioteca do display
 #include <LiquidCrystal.h>
@@ -51,7 +51,13 @@ byte zero = 0x00;
 long timer01=0;
 
 // variáveis para os valores de tempo. weekDay é o dia da semana de dom a sab, 1-7.
-byte second, minute, hour, weekDay, monthDay, month, year;
+byte second, minute, hour, weekDay, monthDay, month, year, checkday=0;
+
+// tempo de toque longo(horario de intervalo)
+byte tempoLongo=4;
+
+// tempo de toque curto(entre aulas sem intervalo)
+byte tempoCurto=2;
 
 // variáveis booleanas para alguns controles no código
 bool toggle=false, firstpass=true;
@@ -93,13 +99,13 @@ byte bcdToDec(byte val){
 // atualiza a data e hora no RTC.
 void setDateTime(){
 
-  byte second =      0; //0-59
-  byte minute =      8; //0-59
-  byte hour =        1; //0-23
-  byte weekDay =     2; //1-7
-  byte monthDay =    21; //1-31
-  byte month =       1; //1-12
-  byte year  =       13; //0-99
+  byte second = 0; //0-59
+  byte minute = 20; //0-59
+  byte hour = 9; //0-23
+  byte weekDay = 2; //1-7
+  byte monthDay = 25; //1-31
+  byte month = 2; //1-12
+  byte year = 13; //0-99
 
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.write(zero); // vai p/ registro 0, onde ficam os segundos. leia o datasheet do DS1307
@@ -117,6 +123,25 @@ void setDateTime(){
   Wire.endTransmission();
 
 }
+
+void resetDateTime(){
+  second=0;
+  Wire.beginTransmission(DS1307_ADDRESS);
+  Wire.write(zero); // vai p/ registro 0, onde ficam os segundos. leia o datasheet do DS1307
+
+  Wire.write(decToBcd(second));
+  Wire.write(decToBcd(minute));
+  Wire.write(decToBcd(hour));
+  Wire.write(decToBcd(weekDay));
+  Wire.write(decToBcd(monthDay));
+  Wire.write(decToBcd(month));
+  Wire.write(decToBcd(year));
+
+  Wire.write(zero); //volta p/ registro 0 que é o canto certo
+
+  Wire.endTransmission();
+}
+
 
 // lê a data do RTC e escreve nas variáveis globais de data, hora, etc
 void getDate(){
@@ -182,40 +207,40 @@ bool timeToStudy(){
   // se não for domingo(0) nem sábado(6) ou se jumper tiver HIGH(passa por cima de sábados e domingos, no caso de sábado letivo)
   // verifica pelas horas se toca 3s(intervalos e inicio/fim) ou 1s(entre aulas)
   if((weekDay!=1 && weekDay!=7) || jumper==HIGH){
-    // toque de 3s para 07h00m, 12h00m, 13h00m, 18h00m, 19h00m
-    if((hour==7 || hour==12 || hour==13 || hour==18 || hour==19) && minute==0 && (second>=0 && second<=2))
+    // toque de tempoLongo s para 07h00m, 12h00m, 13h00m, 18h00m, 19h00m
+    if((hour==7 || hour==12 || hour==13 || hour==18 || hour==19) && minute==0 && (second>=0 && second<=tempoLongo))
       return true;
 
-    // toque de 3s para 8h30m, 10h30m, 14h30m, 16h30m, 20h30m
-    if((hour==8 || hour==10 || hour==14 || hour==16 || hour==20) && minute==30 && (second>=0 && second<=2))
+    // toque de tempoLongo s para 8h30m, 10h30m, 14h30m, 16h30m, 20h30m
+    if((hour==8 || hour==10 || hour==14 || hour==16 || hour==20) && minute==30 && (second>=0 && second<=tempoLongo))
       return true;
 
-    // toque de 3s para 08h50m, 14h50m
-    if((hour==8 || hour==14) && minute==50 && (second>=0 && second<=2))
+    // toque de tempoLongo s para 08h50m, 14h50m
+    if((hour==8 || hour==14) && minute==50 && (second>=0 && second<=tempoLongo))
       return true;
 
-    // toque de 3s para 10h20m, 16h20m
-    if((hour==10 || hour==16) && minute==20 && (second>=0 && second<=2))
+    // toque de tempoLongo s para 10h20m, 16h20m
+    if((hour==10 || hour==16) && minute==20 && (second>=0 && second<=tempoLongo))
       return true;
 
-    // toque de 3s para 20h40m, 22h10m
-    if(((hour==20 && minute==40) || (hour==22 && minute==10)) && (second>=0 && second<=2))
+    // toque de tempoLongo s para 20h40m, 22h10m
+    if(((hour==20 && minute==40) || (hour==22 && minute==10)) && (second>=0 && second<=tempoLongo))
       return true;
 
-    // toque de 1s para 07h45m, 13h45m, 19h45
-    if((hour==7 || hour==13 || hour==19) && minute==45 && second==0)
+    // toque de tempoCurto s para 07h45m, 13h45m, 19h45
+    if((hour==7 || hour==13 || hour==19) && minute==45 && (second>=0 && second<=tempoCurto))
       return true;
 
-    // toque de 1s para 09h35, 15h35m
-    if((hour==9 || hour==15) && minute==35 && second==0)
+    // toque de tempoCurto s para 09h35, 15h35m
+    if((hour==9 || hour==15) && minute==35 && (second>=0 && second<=tempoCurto))
       return true;
 
-    // toque de 1s para 11h15m, 17h15m
-    if((hour==11 || hour==17) && minute==15 && second==0)
+    // toque de tempoCurto s para 11h15m, 17h15m
+    if((hour==11 || hour==17) && minute==15 && (second>=0 && second<=tempoCurto))
       return true;
 
-    // toque de 1s para 21h25m
-    if(hour==21 && minute==25 && second==0)
+    // toque de tempoCurto s para 21h25m
+    if(hour==21 && minute==25 && (second>=0 && second<=tempoCurto))
       return true;
   } else{
     return false;
@@ -232,6 +257,11 @@ void loop() {
 
   // Lê a data do RTC e escreve nas variáveis globais lá.
   getDate();
+
+  if ((hour==6) && (minute==0) && (second==30) && (checkday!=weekDay)){
+    checkday = weekDay;
+    resetDateTime();
+  }
 
   //teste
   if(digitalRead(SW1)==LOW){
